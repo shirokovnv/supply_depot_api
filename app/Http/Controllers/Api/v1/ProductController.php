@@ -24,8 +24,6 @@ class ProductController extends Controller
      */
     public function storeDocument(StoreDocumentRequest $request): DocumentResource
     {
-        $request->getType();
-
         try {
             $document =  (new StoreDocumentUseCase(
                 $request->getType(),
