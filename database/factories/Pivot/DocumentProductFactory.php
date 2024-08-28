@@ -23,7 +23,7 @@ class DocumentProductFactory extends Factory
         return [
             'document_id' => Document::query()->inRandomOrder()->first(),
             'product_id' => Product::query()->inRandomOrder()->first(),
-            'value' => $this->faker->numberBetween(1, 10)
+            'value' => $this->faker->numberBetween(1, 10),
         ];
     }
 }

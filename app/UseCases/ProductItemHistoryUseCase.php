@@ -9,10 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ProductItemHistoryUseCase
 {
-    /**
-     * @param int $id
-     * @return Product
-     */
     public function __invoke(int $id): Product
     {
         return Product::query()

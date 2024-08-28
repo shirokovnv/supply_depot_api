@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\DocumentType;
-use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\WithFaker;
 

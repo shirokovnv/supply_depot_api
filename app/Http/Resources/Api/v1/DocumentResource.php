@@ -23,7 +23,7 @@ class DocumentResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type,
-            'performed_at' => $this->performed_at
+            'performed_at' => $this->performed_at,
         ];
     }
 }

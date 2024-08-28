@@ -10,12 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ProductListHistoryUseCase
 {
-    /**
-     * @return Collection
-     */
     public function __invoke(): Collection
     {
-        return Product::query()->with(['documents' => function(BelongsToMany $query) {
+        return Product::query()->with(['documents' => function (BelongsToMany $query) {
             $query->orderBy('performed_at');
         }])->get();
     }

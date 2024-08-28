@@ -29,18 +29,12 @@ class Product extends Model
         'name',
     ];
 
-    /**
-     * @return BelongsToMany
-     */
     public function documents(): BelongsToMany
     {
         return $this->belongsToMany(Document::class)
             ->withPivot('value', 'inv_error', 'inv_error_cash', 'remains', 'remains_cash', 'cost');
     }
 
-    /**
-     * @return HasOne
-     */
     public function product_remain(): HasOne
     {
         return $this->hasOne(ProductRemain::class);

@@ -14,15 +14,11 @@ use Illuminate\Support\Facades\Log;
 
 class ShowInventoryUseCase
 {
-    /**
-     * @param Carbon $performedAt
-     * @return Collection
-     */
     public function __invoke(Carbon $performedAt): Collection
     {
         DB::connection()->enableQueryLog();
         $result = Product::query()
-            ->with(['documents' => function(BelongsToMany $query) use ($performedAt) {
+            ->with(['documents' => function (BelongsToMany $query) use ($performedAt) {
                 $query
                     ->where('type', DocumentType::Inventory->value)
                     ->whereDate('performed_at', $performedAt)

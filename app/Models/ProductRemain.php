@@ -25,9 +25,6 @@ class ProductRemain extends Model
         'remains',
     ];
 
-    /**
-     * @return BelongsTo
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

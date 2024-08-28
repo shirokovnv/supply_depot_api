@@ -23,30 +23,25 @@ class StoreDocumentUseCase
     private const DAYS_INTERVAL = 20;
 
     /**
-     * @param DocumentType $type
-     * @param Carbon $performedAt
-     * @param array<string, mixed> $items
+     * @param  array<string, mixed>  $items
      */
     public function __construct(
         readonly private DocumentType $type,
         readonly private Carbon $performedAt,
         readonly private array $items
-    )
-    {
-    }
+    ) {}
 
     /**
-     * @return Document
      * @throws InvalidRemainsException
      * @throws QueryException
      */
     public function __invoke(): Document
     {
-        return DB::transaction(function(): Document {
+        return DB::transaction(function (): Document {
             /** @var Document $document */
             $document = Document::query()->create([
                 'type' => $this->type->value,
-                'performed_at' => $this->performedAt
+                'performed_at' => $this->performedAt,
             ]);
 
             foreach ($this->items as $item) {
@@ -57,7 +52,7 @@ class StoreDocumentUseCase
                     ],
                     [
                         'id' => $item['product_id'],
-                        'name' => $item['product_name'] ?? self::DEFAULT_PRODUCT_NAME
+                        'name' => $item['product_name'] ?? self::DEFAULT_PRODUCT_NAME,
                     ]
                 );
 
@@ -82,7 +77,6 @@ class StoreDocumentUseCase
                     );
                 }
 
-                /** @var  $query */
                 $query = ProductRemain::query()->where('product_id', $product->id);
 
                 $inventoryError = $this->calculateInventoryError(
@@ -112,18 +106,12 @@ class StoreDocumentUseCase
 
     /**
      * TODO: refactor it! Use specification. Add as external dependency.
-     *
-     * @param DocumentType $type
-     * @param int $currentRemains
-     * @param int $value
-     * @return bool
      */
     private function isPositiveRemains(
         DocumentType $type,
-        int          $currentRemains,
-        int          $value
-    ): bool
-    {
+        int $currentRemains,
+        int $value
+    ): bool {
         if ($type === DocumentType::Outcome && $currentRemains < $value) {
             return false;
         }
@@ -133,38 +121,28 @@ class StoreDocumentUseCase
 
     /**
      * TODO: refactor it! Use factory.
-     *
-     * @param Builder $query
-     * @param DocumentType $type
-     * @param int $remains
-     * @return int
      */
     private function calculateProductRemains(Builder $query, DocumentType $type, int $remains): int
     {
         $query->lockForUpdate();
 
-        switch($type)
-        {
-            case DocumentType::Income: $query->increment('remains', $remains); break;
-            case DocumentType::Outcome: $query->decrement('remains', $remains); break;
-            case DocumentType::Inventory: $query->update(['remains' => $remains]); break;
+        switch ($type) {
+            case DocumentType::Income: $query->increment('remains', $remains);
+                break;
+            case DocumentType::Outcome: $query->decrement('remains', $remains);
+                break;
+            case DocumentType::Inventory: $query->update(['remains' => $remains]);
+                break;
         }
 
         return $query->first()->remains;
     }
 
-    /**
-     * @param DocumentType $type
-     * @param int $currentRemains
-     * @param int $value
-     * @return int|null
-     */
     private function calculateInventoryError(
         DocumentType $type,
         int $currentRemains,
         int $value
-    ): ?int
-    {
+    ): ?int {
         if ($type !== DocumentType::Inventory) {
             return null;
         }
@@ -172,37 +150,26 @@ class StoreDocumentUseCase
         return $value - $currentRemains;
     }
 
-    /**
-     * @param DocumentType $type
-     * @param int $cost
-     * @return int|null
-     */
     private function calculateCost(DocumentType $type, int $cost): ?int
     {
         return $type === DocumentType::Income ? $cost : null;
     }
 
-    /**
-     * @param int $productId
-     * @param Carbon $performedAt
-     * @return float|null
-     */
     private function calculateAveragePrimeCost(
         int $productId,
         Carbon $performedAt
-    ): ?float
-    {
+    ): ?float {
         /** @var int|float|null $avgCost */
         $avgCost = Product::query()
             ->where('id', $productId)
-            ->with(['documents' => function(BelongsToMany $query) use ($performedAt) {
+            ->with(['documents' => function (BelongsToMany $query) use ($performedAt) {
                 $query
                     ->where('type', DocumentType::Income->value)
                     ->whereDate('performed_at', '<=', $performedAt)
                     ->whereDate('performed_at', '>=', $performedAt->clone()->subDays(self::DAYS_INTERVAL));
             }])
             ->get()
-            ->map(function(Product $product) {
+            ->map(function (Product $product) {
                 $product['avg_cost'] = $product->documents->avg('pivot.cost');
 
                 return $product;
@@ -212,14 +179,14 @@ class StoreDocumentUseCase
         /** @var int|float|null $lastCost */
         $lastCost = Product::query()
             ->where('id', $productId)
-            ->with(['documents' => function(BelongsToMany $query) use ($performedAt) {
+            ->with(['documents' => function (BelongsToMany $query) {
                 $query
                     ->where('type', DocumentType::Income->value)
                     ->orderBy('performed_at', 'desc')
                     ->limit(1);
             }])
             ->get()
-            ->map(function(Product $product) {
+            ->map(function (Product $product) {
                 $product['last_cost'] = $product->documents->avg('pivot.cost');
 
                 return $product;

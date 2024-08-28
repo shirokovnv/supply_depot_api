@@ -34,9 +34,6 @@ class StoreDocumentRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return DocumentType
-     */
     public function getType(): DocumentType
     {
         return DocumentType::from($this->get('type'));
@@ -50,9 +47,6 @@ class StoreDocumentRequest extends FormRequest
         return $this->get('items');
     }
 
-    /**
-     * @return Carbon
-     */
     public function getPerformedAt(): Carbon
     {
         return Carbon::parse($this->get('performed_at'));

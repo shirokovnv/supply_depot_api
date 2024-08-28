@@ -34,7 +34,7 @@ class ProductHistoryResource extends JsonResource
                     'inv_error_cash' => $document->pivot->inv_error_cash,
                     'cost' => $document->pivot->cost,
                 ]);
-            })
+            }),
         ];
     }
 }

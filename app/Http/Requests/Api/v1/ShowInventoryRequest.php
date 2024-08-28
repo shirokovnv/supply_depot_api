@@ -23,13 +23,10 @@ class ShowInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'performed_at' => 'required|date_format:Y-m-d'
+            'performed_at' => 'required|date_format:Y-m-d',
         ];
     }
 
-    /**
-     * @return Carbon
-     */
     public function getPerformedAt(): Carbon
     {
         return Carbon::parse($this->get('performed_at'));
