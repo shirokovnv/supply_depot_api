@@ -6,6 +6,7 @@ use App\Enums\DocumentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Document extends Model
 {
@@ -40,5 +41,13 @@ class Document extends Model
         return $this->belongsToMany(Product::class)
             ->withPivot('value')
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function inventory_error(): HasOne
+    {
+        return $this->hasOne(InventoryError::class);
     }
 }
