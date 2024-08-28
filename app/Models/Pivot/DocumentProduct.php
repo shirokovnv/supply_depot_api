@@ -7,6 +7,13 @@ namespace App\Models\Pivot;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property int $document_id
+ * @property int $value
+ * @property int|null $inv_error
+ */
 class DocumentProduct extends Pivot
 {
     use HasFactory;
@@ -24,6 +31,7 @@ class DocumentProduct extends Pivot
     protected $fillable = [
         'document_id',
         'product_id',
-        'value'
+        'value',
+        'inv_error',
     ];
 }

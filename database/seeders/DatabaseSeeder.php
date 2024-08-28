@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Document;
-use App\Models\InventoryError;
 use App\Models\Pivot\DocumentProduct;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
@@ -17,7 +16,6 @@ class DatabaseSeeder extends Seeder
     {
         Product::factory(10)->create();
         Document::factory(100)->create();
-        InventoryError::factory(100)->create();
         DocumentProduct::factory(1000)->create();
     }
 }

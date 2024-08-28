@@ -46,12 +46,4 @@ class Document extends Model
             ->withPivot('value')
             ->withTimestamps();
     }
-
-    /**
-     * @return HasOne
-     */
-    public function inventory_error(): HasOne
-    {
-        return $this->hasOne(InventoryError::class);
-    }
 }

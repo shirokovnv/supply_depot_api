@@ -56,12 +56,6 @@ class AddDocumentUseCase
                     ]
                 );
 
-                DocumentProduct::query()->create([
-                    'document_id' => $document->id,
-                    'product_id' => $item['product_id'],
-                    'value' => $item['value'],
-                ]);
-
                 /** @var ProductRemain $productRemain */
                 $productRemain = ProductRemain::query()->firstOrCreate(
                     [
@@ -69,7 +63,7 @@ class AddDocumentUseCase
                     ],
                     [
                         'product_id' => $product->id,
-                        'remains' => 0
+                        'remains' => 0,
                     ]
                 );
 
@@ -86,6 +80,18 @@ class AddDocumentUseCase
                 /** @var  $query */
                 $query = ProductRemain::query()->where('product_id', $product->id);
                 $this->calculateProductRemains($query, $this->type, $item['value']);
+
+                /** @var DocumentProduct $documentProduct */
+                $documentProduct = DocumentProduct::query()->create([
+                    'document_id' => $document->id,
+                    'product_id' => $item['product_id'],
+                    'value' => $item['value'],
+                    'inv_error' => $this->calculateInventoryError(
+                        $this->type,
+                        $productRemain->remains,
+                        $item['value']
+                    )
+                ]);
             }
 
         });
@@ -127,7 +133,27 @@ class AddDocumentUseCase
             case DocumentType::Income: $query->increment('remains', $remains); break;
             case DocumentType::Outcome: $query->decrement('remains', $remains); break;
             case DocumentType::Inventory:
+                $query->update(['remains' => $remains]);
                 break;
         }
+    }
+
+    /**
+     * @param DocumentType $type
+     * @param int $currentRemains
+     * @param int $value
+     * @return int|null
+     */
+    private function calculateInventoryError(
+        DocumentType $type,
+        int $currentRemains,
+        int $value
+    ): ?int
+    {
+        if ($type !== DocumentType::Inventory) {
+            return null;
+        }
+
+        return $value - $currentRemains;
     }
 }
