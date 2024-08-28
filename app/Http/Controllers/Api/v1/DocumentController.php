@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\StoreDocumentRequest;
-use App\UseCases\AddDocumentUseCase;
+use App\UseCases\StoreDocumentUseCase;
 use App\UseCases\Exceptions\InvalidRemainsException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -20,18 +21,21 @@ class DocumentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @param StoreDocumentRequest $request
+     * @return JsonResponse
      */
-    public function store(StoreDocumentRequest $request)
+    public function store(StoreDocumentRequest $request): JsonResponse
     {
         $request->getType();
 
         try {
-            (new AddDocumentUseCase(
+            $document =  (new StoreDocumentUseCase(
                 $request->getType(),
                 $request->getPerformedAt(),
                 $request->getItems()
             ))();
+
+            return new JsonResponse($document);
         } catch (InvalidRemainsException $exception)
         {
             throw new HttpException(400, $exception->getMessage(), $exception);

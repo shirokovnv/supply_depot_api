@@ -12,9 +12,10 @@ use App\Models\ProductRemain;
 use App\UseCases\Exceptions\InvalidRemainsException;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
-class AddDocumentUseCase
+class StoreDocumentUseCase
 {
     private const DEFAULT_PRODUCT_NAME = 'Unknown product';
 
@@ -32,12 +33,13 @@ class AddDocumentUseCase
     }
 
     /**
-     * @return void
+     * @return Document
      * @throws InvalidRemainsException
+     * @throws QueryException
      */
-    public function __invoke(): void
+    public function __invoke(): Document
     {
-        DB::transaction(function() {
+        return DB::transaction(function(): Document {
             /** @var Document $document */
             $document = Document::query()->create([
                 'type' => $this->type->value,
@@ -79,13 +81,12 @@ class AddDocumentUseCase
 
                 /** @var  $query */
                 $query = ProductRemain::query()->where('product_id', $product->id);
-                $this->calculateProductRemains($query, $this->type, $item['value']);
 
-                /** @var DocumentProduct $documentProduct */
-                $documentProduct = DocumentProduct::query()->create([
+                DocumentProduct::query()->create([
                     'document_id' => $document->id,
                     'product_id' => $item['product_id'],
                     'value' => $item['value'],
+                    'remains' => $this->calculateProductRemains($query, $this->type, $item['value']),
                     'inv_error' => $this->calculateInventoryError(
                         $this->type,
                         $productRemain->remains,
@@ -94,6 +95,7 @@ class AddDocumentUseCase
                 ]);
             }
 
+            return $document;
         });
     }
 
@@ -124,18 +126,20 @@ class AddDocumentUseCase
      * @param Builder $query
      * @param DocumentType $type
      * @param int $remains
-     * @return void
+     * @return int
      */
-    private function calculateProductRemains(Builder $query, DocumentType $type, int $remains): void
+    private function calculateProductRemains(Builder $query, DocumentType $type, int $remains): int
     {
+        $query->lockForUpdate();
+
         switch($type)
         {
             case DocumentType::Income: $query->increment('remains', $remains); break;
             case DocumentType::Outcome: $query->decrement('remains', $remains); break;
-            case DocumentType::Inventory:
-                $query->update(['remains' => $remains]);
-                break;
+            case DocumentType::Inventory: $query->update(['remains' => $remains]); break;
         }
+
+        return $query->first()->remains;
     }
 
     /**

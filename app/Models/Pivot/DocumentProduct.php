@@ -33,5 +33,6 @@ class DocumentProduct extends Pivot
         'product_id',
         'value',
         'inv_error',
+        'remains',
     ];
 }
