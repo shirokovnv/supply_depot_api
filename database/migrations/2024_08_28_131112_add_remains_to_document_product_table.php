@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('document_product', function (Blueprint $table) {
             $table->unsignedInteger('remains');
+            $table->float('remains_cash')->nullable();
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('document_product', function (Blueprint $table) {
             $table->dropColumn('remains');
+            $table->dropColumn('remains_cash');
         });
     }
 };

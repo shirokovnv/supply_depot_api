@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('document_product', function (Blueprint $table) {
             $table->integer('inv_error')->nullable();
+            $table->float('inv_error_cash')->nullable();
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('document_product', function (Blueprint $table) {
             $table->dropColumn('inv_error');
+            $table->dropColumn('inv_error_cash');
         });
     }
 };

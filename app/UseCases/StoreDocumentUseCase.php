@@ -12,12 +12,15 @@ use App\Models\ProductRemain;
 use App\UseCases\Exceptions\InvalidRemainsException;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class StoreDocumentUseCase
 {
     private const DEFAULT_PRODUCT_NAME = 'Unknown product';
+
+    private const DAYS_INTERVAL = 20;
 
     /**
      * @param DocumentType $type
@@ -82,16 +85,24 @@ class StoreDocumentUseCase
                 /** @var  $query */
                 $query = ProductRemain::query()->where('product_id', $product->id);
 
+                $inventoryError = $this->calculateInventoryError(
+                    $this->type,
+                    $productRemain->remains,
+                    $item['value']
+                );
+                $remains = $this->calculateProductRemains($query, $this->type, $item['value']);
+                $cost = $this->calculateCost($this->type, $item['cost'] ?? null);
+                $productPrimeCost = $this->calculateAveragePrimeCost($product->id, $this->performedAt) ?? $cost;
+
                 DocumentProduct::query()->create([
                     'document_id' => $document->id,
                     'product_id' => $item['product_id'],
                     'value' => $item['value'],
-                    'remains' => $this->calculateProductRemains($query, $this->type, $item['value']),
-                    'inv_error' => $this->calculateInventoryError(
-                        $this->type,
-                        $productRemain->remains,
-                        $item['value']
-                    )
+                    'cost' => $cost,
+                    'remains' => $remains,
+                    'remains_cash' => $remains * $productPrimeCost,
+                    'inv_error' => $inventoryError,
+                    'inv_error_cash' => $inventoryError !== null ? $inventoryError * $productPrimeCost : null,
                 ]);
             }
 
@@ -159,5 +170,62 @@ class StoreDocumentUseCase
         }
 
         return $value - $currentRemains;
+    }
+
+    /**
+     * @param DocumentType $type
+     * @param int $cost
+     * @return int|null
+     */
+    private function calculateCost(DocumentType $type, int $cost): ?int
+    {
+        return $type === DocumentType::Income ? $cost : null;
+    }
+
+    /**
+     * @param int $productId
+     * @param Carbon $performedAt
+     * @return float|null
+     */
+    private function calculateAveragePrimeCost(
+        int $productId,
+        Carbon $performedAt
+    ): ?float
+    {
+        /** @var int|float|null $avgCost */
+        $avgCost = Product::query()
+            ->where('id', $productId)
+            ->with(['documents' => function(BelongsToMany $query) use ($performedAt) {
+                $query
+                    ->where('type', DocumentType::Income->value)
+                    ->whereDate('performed_at', '<=', $performedAt)
+                    ->whereDate('performed_at', '>=', $performedAt->clone()->subDays(self::DAYS_INTERVAL));
+            }])
+            ->get()
+            ->map(function(Product $product) {
+                $product['avg_cost'] = $product->documents->avg('pivot.cost');
+
+                return $product;
+            })
+            ->avg('avg_cost');
+
+        /** @var int|float|null $lastCost */
+        $lastCost = Product::query()
+            ->where('id', $productId)
+            ->with(['documents' => function(BelongsToMany $query) use ($performedAt) {
+                $query
+                    ->where('type', DocumentType::Income->value)
+                    ->orderBy('performed_at', 'desc')
+                    ->limit(1);
+            }])
+            ->get()
+            ->map(function(Product $product) {
+                $product['last_cost'] = $product->documents->avg('pivot.cost');
+
+                return $product;
+            })
+            ->avg('last_cost');
+
+        return $avgCost ?? $lastCost;
     }
 }

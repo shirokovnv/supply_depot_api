@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Enums\DocumentType;
+use App\Models\Pivot\DocumentProduct;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
  * @property DocumentType $type
+ * @property DocumentProduct $pivot
  */
 class Document extends Model
 {
@@ -23,6 +24,7 @@ class Document extends Model
      */
     protected $fillable = [
         'type',
+        'performed_at',
     ];
 
     /**
@@ -34,6 +36,7 @@ class Document extends Model
     {
         return [
             'type' => DocumentType::class,
+            'performed_at' => 'datetime',
         ];
     }
 
@@ -43,7 +46,6 @@ class Document extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class)
-            ->withPivot('value')
-            ->withTimestamps();
+            ->withPivot('value', 'inv_error', 'inv_error_cash', 'remains', 'remains_cash', 'cost');
     }
 }

@@ -30,6 +30,7 @@ class StoreDocumentRequest extends FormRequest
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer',
             'items.*.value' => 'required|integer|min:1',
+            'items.*.cost' => 'required_if:type,income|integer',
         ];
     }
 
