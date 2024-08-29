@@ -1,74 +1,97 @@
-# Laravel Docker Starter Kit
-- Laravel v11.x
-- PHP v8.3.x
-- PostgreSQL v16.x
+# Supply Depot API
 
-# Requirements
+## Зависимости
 
-# How To Deploy
+- [Laravel](https://laravel.com/) v11.x
+- [PHP](https://www.php.net/) v8.3.x
+- [PostgreSQL](https://www.postgresql.org/) v16.x
 
-### For first time only !
+## Первичные требования
+
+- [Docker](https://www.docker.com/) >= 22.x
+
+## Порядок установки
+
+### Первый раз
 - `git clone https://github.com/shirokovnv/supply_depot_api.git`
 - `cd supply_depot_api`
 - `docker compose up -d --build`
 - `docker compose exec php bash`
-- `chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
-- `chmod -R 775 /var/www/storage /var/www/bootstrap/cache`
+- `chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/storage/logs`
+- `chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/storage/logs`
 - `composer setup`
 
-### From the second time onwards
+### В остальных случаях
 - `docker compose up -d`
 
-### Laravel App
-- URL: http://localhost
+### Глоссарий
 
-### Basic docker compose commands
-- Build or rebuild services
-    - `docker compose build`
-- Create and start containers
-    - `docker compose up -d`
-- Stop and remove containers, networks
-    - `docker compose down`
-- Stop all services
-    - `docker compose stop`
-- Restart service containers
-    - `docker compose restart`
-- Run a command inside a container
-    - `docker compose exec [container] [command]`
+Типы документов:
 
-### Useful Laravel Commands
-- Display basic information about your application
-    - `php artisan about`
-- Remove the configuration cache file
-    - `php artisan config:clear`
-- Flush the application cache
-    - `php artisan cache:clear`
-- Clear all cached events and listeners
-    - `php artisan event:clear`
-- Delete all of the jobs from the specified queue
-    - `php artisan queue:clear`
-- Remove the route cache file
-    - `php artisan route:clear`
-- Clear all compiled view files
-    - `php artisan view:clear`
-- Remove the compiled class file
-    - `php artisan clear-compiled`
-- Remove the cached bootstrap files
-    - `php artisan optimize:clear`
-- Delete the cached mutex files created by scheduler
-    - `php artisan schedule:clear-cache`
-- Flush expired password reset tokens
-    - `php artisan auth:clear-resets`
+- `income` - приход
+- `outcome` - расход
+- `inventory` - инвентаризация
 
-### Laravel Pint (Code Style Fixer | PHP-CS-Fixer)
-- Format all files
-    - `vendor/bin/pint`
-- Format specific files or directories
-    - `vendor/bin/pint app/Models`
-    - `vendor/bin/pint app/Models/User.php`
-- Format all files with preview
-    - `vendor/bin/pint -v`
-- Format uncommitted changes according to Git
-    - `vendor/bin/pint --dirty`
-- Inspect all files
-  - `vendor/bin/pint --test`
+### API
+
+**1. _Проведение документа_**
+
+POST http://localhost/api/v1/products/documents
+
+```json
+{
+    "type": "income",
+    "performed_at": "2024-08-25 19:00:00",
+    "items": [
+        {
+            "product_id": 1,
+            "value": 1,
+            "name": "Some product",
+            "cost": 20
+        },
+        {
+            "product_id": 2,
+            "value": 1,
+            "cost": 10
+        }
+    ]
+}
+```
+
+**2. _История движения по товарам_**
+
+GET http://localhost/api/v1/products/history
+
+**3. _История движения по конкретному товару_**
+
+GET http://localhost/api/v1/products/{product_ID}/history
+
+**4. _Просмотр результатов инвентаризации за указанную дату_**
+
+GET http://localhost/api/v1/products/inventory?performed_at=2024-08-25
+
+### Структура БД
+
+Таблица `products`
+
+| ID  | name  | created_at | updated_at |
+|:----|:------|:-----------|:-----------|
+| 1   |Shoes  | 2024-08-29 | 2024-08-29 |
+
+Таблица `documents`
+
+| ID  | type | performed_at        |
+|:----|:-----|:--------------------|
+| 1   |income| 2024-08-25 10:00:00 | 
+
+Таблица `document_product`
+
+| ID  | document_id | product_id | value  | inv_error | inv_error_cash | remains  | remains_cash | cost |
+|:----|:------------|:-----------|:-------|:----------|:---------------|:---------|:-------------|:-----|
+| |ID проведенного документа| ID продукта, связанного с документом | Значение "приход", "расход" или "инв."| Ошибка инв. в шт.| Ошибка инв. в рубл. | Остаток в шт. | Остаток в рубл. | стоимость прихода |
+
+Таблица `product_remains`
+
+| ID  | product_id  | remains                     |
+|:----|:------------|:----------------------------|
+|     | ID продукта | Текущий остаток по продукту | 
