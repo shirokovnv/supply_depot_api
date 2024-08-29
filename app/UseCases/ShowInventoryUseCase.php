@@ -16,8 +16,7 @@ class ShowInventoryUseCase
 {
     public function __invoke(Carbon $performedAt): Collection
     {
-        DB::connection()->enableQueryLog();
-        $result = Product::query()
+        return Product::query()
             ->with(['documents' => function (BelongsToMany $query) use ($performedAt) {
                 $query
                     ->where('type', DocumentType::Inventory->value)
@@ -25,14 +24,5 @@ class ShowInventoryUseCase
                     ->orderBy('performed_at', 'desc')
                     ->limit(1);
             }])->get();
-
-        $queries = DB::getQueryLog();
-        $last_query = end($queries);
-
-        Log::info($queries);
-
-        DB::disableQueryLog();
-
-        return $result;
     }
 }
