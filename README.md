@@ -45,8 +45,8 @@ POST http://localhost/api/v1/products/documents
     "items": [
         {
             "product_id": 1,
+            "product_name": "Some product",
             "value": 1,
-            "name": "Some product",
             "cost": 20
         },
         {

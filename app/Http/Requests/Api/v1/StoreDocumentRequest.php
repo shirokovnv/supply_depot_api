@@ -28,6 +28,7 @@ class StoreDocumentRequest extends FormRequest
             'type' => ['required', Rule::enum(DocumentType::class)],
             'performed_at' => 'required|date_format:Y-m-d H:i:s',
             'items' => 'required|array',
+            'items.*.product_name' => 'string|nullable',
             'items.*.product_id' => 'required|integer',
             'items.*.value' => 'required|integer|min:1',
             'items.*.cost' => 'required_if:type,income|integer',
